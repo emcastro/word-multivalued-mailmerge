@@ -34,3 +34,14 @@ Sub Register_Event_Handler()
 End Sub
 
 
+Public Function GroupName(str As String) As String
+    Dim items
+    items = Split(str, MailMergeEx.Tag_GroupDelimiter, 2)
+    If UBound(items) = 0 Then
+        GroupName = ""
+    Else
+        GroupName = items(0)
+    End If
+End Function
+
+

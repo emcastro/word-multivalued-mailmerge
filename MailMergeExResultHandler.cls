@@ -156,7 +156,7 @@ Function AnalyseField(field As Range) As FieldInfo
     
     item.Values = valueStrings
     
-    item.InitGroupName
+    item.GroupName = MailMergeEx.GroupName(Name)
         
     Set AnalyseField = item
 End Function
