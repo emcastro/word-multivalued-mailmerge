@@ -15,7 +15,6 @@ Public Tag_StartOfDocument As String
 Public Tag_FieldStart As String
 Public Tag_FieldEnd As String
 Public Tag_FieldNameDelimiter As String
-Public Tag_NewLineSubstitute As String
 
 Sub Class_Initialize()
     Tag_StartOfDocument = MailMergeEx.Tag_StartOfDocument
@@ -23,7 +22,6 @@ Sub Class_Initialize()
     Tag_FieldEnd = MailMergeEx.Tag_FieldEnd
     Tag_FieldNameDelimiter = MailMergeEx.Tag_FieldNameDelimiter
     Tag_ValueDelimiter = MailMergeEx.Tag_ValueDelimiter
-    Tag_NewLineSubstitute = MailMergeEx.Tag_NewLineSubstitute
 End Sub
 
 Public Sub CleanMerged()
@@ -156,20 +154,11 @@ Function AnalyseField(field As Range) As FieldInfo
     Set valueRange = Doc.Range(nameDelimiterRange.End, r.End)
     valueStrings = Split(valueRange.Text, Tag_ValueDelimiter)
     
-    Dim i As Integer
-    For i = LBound(valueStrings) To UBound(valueStrings)
-        valueStrings(i) = EscapeFieldValue(valueStrings(i))
-    Next
-    
     item.Values = valueStrings
     
     item.InitGroupName
         
     Set AnalyseField = item
-End Function
-
-Function EscapeFieldValue(ByVal str As String) As String
-    EscapeFieldValue = Replace(str, Tag_NewLineSubstitute, Chr(13))
 End Function
 
 Function SubDocAfter(location As Range)
