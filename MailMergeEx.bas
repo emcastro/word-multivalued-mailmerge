@@ -44,4 +44,15 @@ Public Function GroupName(str As String) As String
     End If
 End Function
 
+Public Function AddToGroup(groups As Collection, key As String, item As Object)
+    Dim groupItems As Collection
+    On Error Resume Next
+    Set groupItems = groups(key)
+    If groupItems Is Nothing Then
+        Set groupItems = New Collection
+        groups.Add groupItems, key
+    End If
+    Err.Clear
+    groupItems.Add item
+End Function
 

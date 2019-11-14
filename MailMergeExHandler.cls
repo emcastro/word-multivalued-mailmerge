@@ -124,3 +124,19 @@ End Function
 Function FieldRange(f As field) As Range
     Set FieldRange = Doc.Range(f.Code.Start - 1, f.Result.End + 1)
 End Function
+
+Function FieldByGroups() As Collection
+    Dim groups As New Collection
+    
+    Dim data As Object
+    For Each data In Doc.MailMerge.DataSource.DataFields
+        Dim group As String
+        Dim groupItems As Collection
+        
+        group = MailMergeEx.GroupName(data.Name)
+        
+        MailMergeEx.AddToGroup groups, group, data
+    Next
+  
+    Set FieldByGroups = groups
+End Function
