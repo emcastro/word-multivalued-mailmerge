@@ -17,9 +17,10 @@ Private PreviousGroupBy As Collection ' by field name
 Private DocData As Collection ' by doc index of (Collection by field name of (Collection of string values))
 Private CurrentDoc As Collection ' by field name of (Collection of string values)
 
+Dim handler As New MailMergeExHandler
+
 Private Sub App_MailMergeBeforeMerge(ByVal Doc As Document, ByVal StartRecord As Long, ByVal EndRecord As Long, Cancel As Boolean)
         
-    Dim handler As New MailMergeExHandler
     Set handler.Doc = Doc
     
     ' Call with error handling
@@ -36,6 +37,7 @@ Private Sub App_MailMergeBeforeMerge(ByVal Doc As Document, ByVal StartRecord As
     Set DocData = New Collection
     
     handler.InstallTags
+    Exit Sub
     
 No_GroupBy_Fields:
     MsgBox "Aucun champs de regroupement"
@@ -86,7 +88,6 @@ End Sub
 
 Private Sub App_MailMergeAfterMerge(ByVal Doc As Document, ByVal DocResult As Document)
     
-    Dim handler As New MailMergeExHandler
     Set handler.Doc = Doc
     
     handler.RemoveTags
@@ -95,7 +96,7 @@ Private Sub App_MailMergeAfterMerge(ByVal Doc As Document, ByVal DocResult As Do
     Dim resultHandler As New MailMergeExResultHandler
     Set resultHandler.Doc = DocResult
     
-    'resultHandler.CleanMerged
+    'resultHandler.PopulateMerged
     
 End Sub
 

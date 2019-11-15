@@ -24,7 +24,7 @@ Sub Class_Initialize()
     Tag_ValueDelimiter = MailMergeEx.Tag_ValueDelimiter
 End Sub
 
-Public Sub CleanMerged()
+Public Sub PopulateMerged()
     
     ' Foreach sub-document
     Dim subdoc As Range

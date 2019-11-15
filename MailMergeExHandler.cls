@@ -15,7 +15,6 @@ Dim Tag_StartOfDocument As String
 Dim Tag_FieldStart As String
 Dim Tag_FieldEnd As String
 Dim Tag_FieldNameDelimiter As String
-Dim ViewMailMergeFieldCodes As Boolean
 
 Sub Class_Initialize()
     Tag_StartOfDocument = MailMergeEx.Tag_StartOfDocument
@@ -25,10 +24,6 @@ Sub Class_Initialize()
 End Sub
 
 Sub InstallTags()
-    ' Showing field names avoids having to properly handle empty fields
-    ViewMailMergeFieldCodes = Doc.MailMerge.ViewMailMergeFieldCodes
-    Doc.MailMerge.ViewMailMergeFieldCodes = True
-    
     AddStartOfDocumentTag
    
     Dim f As field
@@ -46,7 +41,6 @@ Sub RemoveTags()
     For Each f In Doc.Fields
         RemoveFieldTags f
     Next
-    Doc.MailMerge.ViewMailMergeFieldCodes = ViewMailMergeFieldCodes
 End Sub
 
 Sub AddFieldTags(f As field)
@@ -122,7 +116,11 @@ Function StartOfDocumentRange() As Range
 End Function
 
 Function FieldRange(f As field) As Range
-    Set FieldRange = Doc.Range(f.Code.Start - 1, f.Result.End + 1)
+    If f.Result.Text <> "" Then
+        Set FieldRange = Doc.Range(f.Code.Start - 1, f.Result.End + 1)
+    Else
+        Set FieldRange = Doc.Range(f.Code.Start - 1, f.Result.End)
+    End If
 End Function
 
 Function FieldByGroups() As Collection
