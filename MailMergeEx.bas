@@ -56,3 +56,51 @@ Public Sub AddToGroup(Groups As Collection, Key As String, Item As Object)
     GroupItems.Add Item
 End Sub
 
+Public Sub RemoveDuplicates(Group As Collection)
+    Dim PreviousLine As Collection
+    
+    Dim i, j As Integer
+    Dim Populated, Duplicate As Boolean
+    Dim Value As String
+    
+    ' init Previousline
+    Set PreviousLine = New Collection
+    For i = 1 To Group.Count
+        PreviousLine.Add ""
+    Next
+    
+    For j = Group(1).Count To 1 Step -1
+        
+        Populated = False
+        Duplicate = True
+        
+        For i = 1 To Group.Count
+            Value = Group(i)(j)
+            If Value <> "" Then
+                Populated = True
+            End If
+            
+            If Value <> PreviousLine(i) Then
+                Duplicate = False
+            End If
+            
+        Next
+        
+        ' copy current to previous
+        Set PreviousLine = New Collection
+        For i = 1 To Group.Count
+            PreviousLine.Add Group(i)(j)
+        Next
+                
+        If (Not Populated Or Duplicate) And Group(1).Count > 1 Then
+            ' Delete item
+            For i = 1 To Group.Count
+                Group(i).Remove j
+            Next
+        End If
+        
+    Next
+    
+End Sub
+
+

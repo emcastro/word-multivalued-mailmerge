@@ -112,7 +112,10 @@ Private Sub App_MailMergeAfterMerge(ByVal Doc As Document, ByVal DocResult As Do
     ' Analyse collected mail merge data
     Dim DocInfo As Collection
     For Each DocInfo In DocData
-        
+        Dim Group As Collection
+        For Each Group In DocInfo
+            MailMergeEx.RemoveDuplicates Group
+        Next
     Next
     
     Dim ResultHandler As New MailMergeExResultHandler
