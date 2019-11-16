@@ -27,25 +27,24 @@ End Sub
 Public Sub PopulateMerged()
     
     ' Foreach sub-document
-    Dim subdoc As Range
-    Set subdoc = SubDocAfter(StartOfDocumentRange)
-    Do Until subdoc Is Nothing
+    Dim Subdoc As Range
+    Set Subdoc = SubDocAfter(StartOfDocumentRange)
+    Do Until Subdoc Is Nothing
         
-        Dim analysis As Collection
-        Set analysis = AnalyzeSubDoc(subdoc)
+        Dim Analysis As Collection
+        Set Analysis = AnalyzeSubDoc(Subdoc)
         
-        Dim fieldGroup As Collection
-        Dim field As FieldInfo
+        Dim FieldGroup As Collection
+        Dim Field As FieldInfo
         
-        For Each fieldGroup In analysis
-            If fieldGroup.Count = 1 Then
+        For Each FieldGroup In Analysis
+            If FieldGroup.Count = 1 Then
                 ' Simple substitution
-                Set field = fieldGroup(1)
-                field.Range.Text = field.Values(0)
+                Set Field = FieldGroup(1)
             Else
                 ' Complex substitution
                 Dim r As Range
-                Set r = Doc.Range(fieldGroup(1).Range.Start, fieldGroup(fieldGroup.Count).Range.End)
+                Set r = Doc.Range(FieldGroup(1).Range.Start, FieldGroup(FieldGroup.Count).Range.End)
                 Set r = Doc.Range(r.Paragraphs.First.Range.Start, r.Paragraphs.Last.Range.End)
                                 
                 If Asc(Right(r, 1)) <> 13 Then ' Special case when not standard paragraph (i.e. table)
@@ -76,9 +75,9 @@ Sub RemoveStartOfDocumentTags()
     Doc.Range.Find.Execute Tag_StartOfDocument, ReplaceWith:=""
 End Sub
 
-Sub ReplaceFieldWithValues(fieldGroup As Collection, idx As Integer, r As Range)
+Sub ReplaceFieldWithValues(FieldGroup As Collection, idx As Integer, r As Range)
     Dim f As FieldInfo
-    For Each f In fieldGroup
+    For Each f In FieldGroup
         Dim r2 As Range
         Set r2 = r.Duplicate
         r2.Find.Execute Tag_FieldStart & f.Name & Tag_FieldNameDelimiter & "*" & Tag_FieldEnd, _
@@ -87,62 +86,64 @@ Sub ReplaceFieldWithValues(fieldGroup As Collection, idx As Integer, r As Range)
     Next
 End Sub
 
-Function AnalyzeSubDoc(subdoc As Range) As Collection
+Function AnalyzeSubDoc(Subdoc As Range) As Collection
     
     Dim r As Range
-    Dim field As Range
+    Dim Field As Range
     
-    Dim items As New Collection
+    Dim Items As New Collection
     
-    Set r = subdoc.Duplicate
+    Set r = Subdoc.Duplicate
     
     ' While finding field
     Do While r.Find.Execute(Tag_FieldStart & "*" & Tag_FieldEnd, MatchWildcards:=True)
         ' that are in the current document
-        If r.Start > subdoc.End Then
+        If r.Start > Subdoc.End Then
             Exit Do
         End If
         
-        items.Add AnalyseField(r)
+        Items.Add AnalyseField(r)
     Loop
     
     ' Groupe by non-empty GroupName
     Dim groupedItems As New Collection
     
-    Dim item As FieldInfo
-    Dim currentGroup As Collection
-    Dim currentGroupName As String
-    currentGroupName = ""
-    For Each item In items
-        If item.GroupName <> currentGroupName Or item.GroupName = "" Then
-            Set currentGroup = New Collection
-            groupedItems.Add currentGroup
-            currentGroupName = item.GroupName
+    Dim Item As FieldInfo
+    Dim CurrentGroup As Collection
+    Dim CurrentGroupName As String
+    CurrentGroupName = ""
+    For Each Item In Items
+        If Item.GroupName <> CurrentGroupName Or Item.GroupName = "" Then
+            Set CurrentGroup = New Collection
+            groupedItems.Add CurrentGroup
+            CurrentGroupName = Item.GroupName
         End If
-        currentGroup.Add item
+        CurrentGroup.Add Item
     Next
             
     Set AnalyzeSubDoc = groupedItems
     
 End Function
 
-Function AnalyseField(field As Range) As FieldInfo
-    Dim item As New FieldInfo
+Function AnalyseField(Field As Range) As FieldInfo
+    Dim Item As New FieldInfo
     
-    Set item.Range = field.Duplicate
+    Set Item.Range = Field.Duplicate
     
     ' Cut start and end tags
     Dim r As Range
-    Set r = field.Duplicate
+    Set r = Field.Duplicate
     r.Start = r.Start + Len(Tag_FieldStart)
     r.End = r.End - Len(Tag_FieldEnd)
         
     ' Find name delimiter
-    Dim nameDelimiterRange As Range
-    Set nameDelimiterRange = r.Duplicate
-    nameDelimiterRange.Find.Execute Tag_FieldNameDelimiter
+    Dim NameDelimiterRange As Range
+    Set NameDelimiterRange = r.Duplicate
+    NameDelimiterRange.Find.Execute Tag_FieldNameDelimiter
 
     ' Extract name
+    Dim NameRange As Range
+    Set NameRange = Doc.Range(r.Start, NameDelimiterRange.Start)
     Dim nameRange As Range
     Set nameRange = Doc.Range(r.Start, nameDelimiterRange.Start)
         
@@ -156,38 +157,38 @@ Function AnalyseField(field As Range) As FieldInfo
     
     item.Values = valueStrings
     
-    item.GroupName = MailMergeEx.GroupName(Name)
+    Item.GroupName = MailMergeEx.GroupName(Name)
         
-    Set AnalyseField = item
+    Set AnalyseField = Item
 End Function
 
-Function SubDocAfter(location As Range)
-    Dim sod As Range
-    Dim nextSod As Range
-    Dim found As Boolean
+Function SubDocAfter(Location As Range)
+    Dim Sod As Range
+    Dim NextSod As Range
+    Dim Found As Boolean
     
     ' If at the end of the document
-    If location.End >= Doc.Range.End Then
+    If Location.End >= Doc.Range.End Then
         Set SubDocAfter = Nothing
         Exit Function
     End If
     
     ' Searching start tag
-    Set sod = Doc.Range(location.End, Doc.Range.End)
-    found = sod.Find.Execute(Tag_StartOfDocument)
-    If Not found Then
+    Set Sod = Doc.Range(Location.End, Doc.Range.End)
+    Found = Sod.Find.Execute(Tag_StartOfDocument)
+    If Not Found Then
         Set SubDocAfter = Nothing
         Exit Function
     End If
     
     ' Searching end tag
-    Set nextSod = Doc.Range(sod.End, Doc.Range.End)
-    found = nextSod.Find.Execute(Tag_StartOfDocument)
+    Set NextSod = Doc.Range(Sod.End, Doc.Range.End)
+    Found = NextSod.Find.Execute(Tag_StartOfDocument)
     
-    If found Then ' Standard case
-        Set SubDocAfter = Doc.Range(sod.Start, nextSod.Start)
+    If Found Then ' Standard case
+        Set SubDocAfter = Doc.Range(Sod.Start, NextSod.Start)
     Else ' When at end of document
-        Set SubDocAfter = Doc.Range(sod.Start, Doc.Range.End)
+        Set SubDocAfter = Doc.Range(Sod.Start, Doc.Range.End)
     End If
         
 End Function

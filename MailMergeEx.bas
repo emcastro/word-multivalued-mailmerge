@@ -35,24 +35,24 @@ End Sub
 
 
 Public Function GroupName(str As String) As String
-    Dim items
-    items = Split(str, MailMergeEx.Tag_GroupDelimiter, 2)
-    If UBound(items) = 0 Then
+    Dim Items
+    Items = Split(str, MailMergeEx.Tag_GroupDelimiter, 2)
+    If UBound(Items) = 0 Then
         GroupName = ""
     Else
-        GroupName = items(0)
+        GroupName = Items(0)
     End If
 End Function
 
-Public Function AddToGroup(groups As Collection, key As String, item As Object)
-    Dim groupItems As Collection
+Public Function AddToGroup(Groups As Collection, Key As String, Item As Object)
+    Dim GroupItems As Collection
     On Error Resume Next
-    Set groupItems = groups(key)
-    If groupItems Is Nothing Then
-        Set groupItems = New Collection
-        groups.Add groupItems, key
+    Set GroupItems = Groups(Key)
+    If GroupItems Is Nothing Then
+        Set GroupItems = New Collection
+        Groups.Add GroupItems, Key
     End If
     Err.Clear
-    groupItems.Add item
+    GroupItems.Add Item
 End Function
 

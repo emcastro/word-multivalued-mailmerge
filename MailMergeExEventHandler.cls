@@ -17,26 +17,26 @@ Private PreviousGroupBy As Collection ' by field name
 Private DocData As Collection ' by doc index of (Collection by field name of (Collection of string values))
 Private CurrentDoc As Collection ' by field name of (Collection of string values)
 
-Dim handler As New MailMergeExHandler
+Dim Handler As New MailMergeExHandler
 
 Private Sub App_MailMergeBeforeMerge(ByVal Doc As Document, ByVal StartRecord As Long, ByVal EndRecord As Long, Cancel As Boolean)
         
-    Set handler.Doc = Doc
+    Set Handler.Doc = Doc
     
     ' Call with error handling
     On Error GoTo No_GroupBy_Fields
-    Set GroupBy_Fields = handler.FieldByGroups("")
+    Set GroupBy_Fields = Handler.FieldByGroups("")
     Err.Clear
     
     Set PreviousGroupBy = New Collection
-    Dim data As MailMergeDataField
-    For Each data In GroupBy_Fields
-        PreviousGroupBy.Add "", data.Name
+    Dim Data As MailMergeDataField
+    For Each Data In GroupBy_Fields
+        PreviousGroupBy.Add "", Data.Name
     Next
     
     Set DocData = New Collection
     
-    handler.InstallTags
+    Handler.InstallTags
     Exit Sub
     
 No_GroupBy_Fields:
@@ -46,31 +46,31 @@ End Sub
 
 Private Sub App_MailMergeBeforeRecordMerge(ByVal Doc As Document, Cancel As Boolean)
     
-    Dim handler As New MailMergeExHandler
-    Set handler.Doc = Doc
+    Dim Handler As New MailMergeExHandler
+    Set Handler.Doc = Doc
       
-    Dim current As New Collection
-    Dim different As Boolean
+    Dim Current As New Collection
+    Dim Different As Boolean
     
     ' Compare each group-by field s(those in group "") to the one of previous document
     ' to check if the current document is in the same group or not.
-    Dim data As MailMergeDataField
-    For Each data In GroupBy_Fields
-        current.Add data.Value, data.Name
-        If data.Value <> PreviousGroupBy(data.Name) Then
-            different = True
+    Dim Data As MailMergeDataField
+    For Each Data In GroupBy_Fields
+        Current.Add Data.Value, Data.Name
+        If Data.Value <> PreviousGroupBy(Data.Name) Then
+            Different = True
         End If
     Next
         
-    If different Then
+    If Different Then
         ' Init all fields of the current document
         Set CurrentDoc = New Collection
         
-        For Each data In Doc.MailMerge.DataSource.DataFields
+        For Each Data In Doc.MailMerge.DataSource.DataFields
             Dim valueSet As Collection
             Set valueSet = New Collection
-            valueSet.Add data.Value
-            CurrentDoc.Add valueSet, data.Name
+            valueSet.Add Data.Value
+            CurrentDoc.Add valueSet, Data.Name
         Next
         
         DocData.Add CurrentDoc
@@ -78,25 +78,25 @@ Private Sub App_MailMergeBeforeRecordMerge(ByVal Doc As Document, Cancel As Bool
         Cancel = True
         ' Add values to other groups
         
-        For Each data In Doc.MailMerge.DataSource.DataFields
-            CurrentDoc(data.Name).Add data.Value
+        For Each Data In Doc.MailMerge.DataSource.DataFields
+            CurrentDoc(Data.Name).Add Data.Value
         Next
     End If
   
-    Set PreviousGroupBy = current
+    Set PreviousGroupBy = Current
 End Sub
 
 Private Sub App_MailMergeAfterMerge(ByVal Doc As Document, ByVal DocResult As Document)
     
-    Set handler.Doc = Doc
+    Set Handler.Doc = Doc
     
-    handler.RemoveTags
+    Handler.RemoveTags
     
     
-    Dim resultHandler As New MailMergeExResultHandler
-    Set resultHandler.Doc = DocResult
+    Dim ResultHandler As New MailMergeExResultHandler
+    Set ResultHandler.Doc = DocResult
     
-    'resultHandler.PopulateMerged
+    ResultHandler.PopulateMerged DocData
     
 End Sub
 

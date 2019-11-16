@@ -26,7 +26,7 @@ End Sub
 Sub InstallTags()
     AddStartOfDocumentTag
    
-    Dim f As field
+    Dim f As Field
     
     For Each f In Doc.Fields
         AddFieldTags f
@@ -36,22 +36,22 @@ End Sub
 Sub RemoveTags()
     RemoveStartOfDocumentTag
     
-    Dim f As field
+    Dim f As Field
     
     For Each f In Doc.Fields
         RemoveFieldTags f
     Next
 End Sub
 
-Sub AddFieldTags(f As field)
-    Dim fieldCommand As String
-    fieldCommand = Trim(f.Code.Text)
+Sub AddFieldTags(f As Field)
+    Dim FieldCommand As String
+    FieldCommand = Trim(f.Code.Text)
 
-    If f.Type = wdFieldMergeField And fieldCommand Like "MERGEFIELD *" Then
+    If f.Type = wdFieldMergeField And FieldCommand Like "MERGEFIELD *" Then
         Dim Name As String
         Dim r As Range
         
-        Name = Trim(Split(fieldCommand, " ", 2)(1))
+        Name = Trim(Split(FieldCommand, " ", 2)(1))
         Set r = FieldRange(f)
         ' insert text in reverse order
         r.InsertBefore Tag_FieldNameDelimiter
@@ -61,15 +61,15 @@ Sub AddFieldTags(f As field)
     End If
 End Sub
 
-Sub RemoveFieldTags(f As field)
-    Dim fieldCommand As String
-    fieldCommand = Trim(f.Code.Text)
+Sub RemoveFieldTags(f As Field)
+    Dim FieldCommand As String
+    FieldCommand = Trim(f.Code.Text)
 
-    If f.Type = wdFieldMergeField And fieldCommand Like "MERGEFIELD *" Then
+    If f.Type = wdFieldMergeField And FieldCommand Like "MERGEFIELD *" Then
         Dim Name As String
         Dim r As Range
         
-        Name = Trim(Split(fieldCommand, " ", 2)(1))
+        Name = Trim(Split(FieldCommand, " ", 2)(1))
         Set r = FieldRange(f)
         ' remove text in reverse order
         SafeRemoveBefore r, Tag_FieldNameDelimiter
@@ -91,23 +91,23 @@ End Sub
 ' SafeRemove means remove that checks that the text to remove does
 ' exist before removing it.
 
-Sub SafeRemoveBefore(location As Range, str)
+Sub SafeRemoveBefore(Location As Range, str)
     Dim r As Range
-    Set r = Doc.Range(location.Start - Len(str), location.Start)
+    Set r = Doc.Range(Location.Start - Len(str), Location.Start)
     SafeRemoveAt r, str
 End Sub
 
-Sub SafeRemoveAfter(location As Range, str)
+Sub SafeRemoveAfter(Location As Range, str)
     Dim r As Range
-    Set r = Doc.Range(location.End, location.End + Len(str))
+    Set r = Doc.Range(Location.End, Location.End + Len(str))
     SafeRemoveAt r, str
 End Sub
 
-Sub SafeRemoveAt(location As Range, str)
-    If location.Text <> str Then
-        MsgBox location.Text & " not found as " & location.Start
+Sub SafeRemoveAt(Location As Range, str)
+    If Location.Text <> str Then
+        MsgBox Location.Text & " not found as " & Location.Start
     Else
-        location.Delete
+        Location.Delete
     End If
 End Sub
 
@@ -115,7 +115,7 @@ Function StartOfDocumentRange() As Range
     Set StartOfDocumentRange = Doc.Range(Doc.Range.Start, Doc.Range.Start)
 End Function
 
-Function FieldRange(f As field) As Range
+Function FieldRange(f As Field) As Range
     If f.Result.Text <> "" Then
         Set FieldRange = Doc.Range(f.Code.Start - 1, f.Result.End + 1)
     Else
@@ -124,17 +124,17 @@ Function FieldRange(f As field) As Range
 End Function
 
 Function FieldByGroups() As Collection
-    Dim groups As New Collection
+    Dim Groups As New Collection
     
-    Dim data As Object
-    For Each data In Doc.MailMerge.DataSource.DataFields
+    Dim Data As Object
+    For Each Data In Doc.MailMerge.DataSource.DataFields
         Dim group As String
-        Dim groupItems As Collection
+        Dim GroupItems As Collection
         
-        group = MailMergeEx.GroupName(data.Name)
+        group = MailMergeEx.GroupName(Data.Name)
         
-        MailMergeEx.AddToGroup groups, group, data
+        MailMergeEx.AddToGroup Groups, group, Data
     Next
   
-    Set FieldByGroups = groups
+    Set FieldByGroups = Groups
 End Function
