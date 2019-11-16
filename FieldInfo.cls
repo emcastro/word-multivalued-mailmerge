@@ -11,5 +11,4 @@ Option Explicit
 
 Public Name As String
 Public Range As Range
-Public Values As Variant 'String(*)
 Public GroupName As String

@@ -12,7 +12,7 @@ Option Explicit
 Public WithEvents App As Word.Application
 Attribute App.VB_VarHelpID = -1
 
-Private GroupBy_Fields As Collection ' by group name of Collection
+Private FieldByGroups As Collection ' by group name of Collection
 Private PreviousGroupBy As Collection ' by field name
 Private DocData As Collection ' by doc index of (Collection by field name of (Collection of string values))
 Private CurrentDoc As Collection ' by field name of (Collection of string values)
@@ -22,24 +22,27 @@ Dim Handler As New MailMergeExHandler
 Private Sub App_MailMergeBeforeMerge(ByVal Doc As Document, ByVal StartRecord As Long, ByVal EndRecord As Long, Cancel As Boolean)
         
     Set Handler.Doc = Doc
+    Set FieldByGroups = Handler.FieldByGroups
     
     ' Call with error handling
-    On Error GoTo No_GroupBy_Fields
-    Set GroupBy_Fields = Handler.FieldByGroups("")
+    On Error GoTo No_MainGroup
+    FieldByGroups.Item "" ' Test if main group exists
     Err.Clear
     
+    ' Init mail merge data athering
     Set PreviousGroupBy = New Collection
     Dim Data As MailMergeDataField
-    For Each Data In GroupBy_Fields
+    For Each Data In FieldByGroups("")
         PreviousGroupBy.Add "", Data.Name
     Next
     
     Set DocData = New Collection
     
+    ' Add tags to the mail merge document
     Handler.InstallTags
     Exit Sub
     
-No_GroupBy_Fields:
+No_MainGroup:
     MsgBox "Aucun champs de regroupement"
         
 End Sub
@@ -51,11 +54,13 @@ Private Sub App_MailMergeBeforeRecordMerge(ByVal Doc As Document, Cancel As Bool
       
     Dim Current As New Collection
     Dim Different As Boolean
+    Dim GroupName As String
+    Dim Fields As Collection
     
     ' Compare each group-by field s(those in group "") to the one of previous document
     ' to check if the current document is in the same group or not.
     Dim Data As MailMergeDataField
-    For Each Data In GroupBy_Fields
+    For Each Data In FieldByGroups("")
         Current.Add Data.Value, Data.Name
         If Data.Value <> PreviousGroupBy(Data.Name) Then
             Different = True
@@ -63,25 +68,36 @@ Private Sub App_MailMergeBeforeRecordMerge(ByVal Doc As Document, Cancel As Bool
     Next
         
     If Different Then
-        ' Init all fields of the current document
+        ' Init groups and fields of the current document
         Set CurrentDoc = New Collection
         
-        For Each Data In Doc.MailMerge.DataSource.DataFields
-            Dim valueSet As Collection
-            Set valueSet = New Collection
-            valueSet.Add Data.Value
-            CurrentDoc.Add valueSet, Data.Name
+        For Each Fields In FieldByGroups
+            Dim Group As Collection
+            Set Group = New Collection
+        
+            For Each Data In Fields
+                GroupName = MailMergeEx.GroupName(Data.Name) ' the safe for each iteration
+                
+                Dim Values As Collection
+                Set Values = New Collection
+                Values.Add Data.Value
+                Group.Add Values, Data.Name
+            Next
+            CurrentDoc.Add Group, GroupName
         Next
         
         DocData.Add CurrentDoc
     Else
         Cancel = True
-        ' Add values to other groups
-        
-        For Each Data In Doc.MailMerge.DataSource.DataFields
-            CurrentDoc(Data.Name).Add Data.Value
-        Next
     End If
+    
+    ' Add values to groups
+    For Each Fields In FieldByGroups
+        For Each Data In Fields
+            GroupName = MailMergeEx.GroupName(Data.Name)
+            CurrentDoc(GroupName)(Data.Name).Add Data.Value
+        Next
+    Next
   
     Set PreviousGroupBy = Current
 End Sub
@@ -90,13 +106,19 @@ Private Sub App_MailMergeAfterMerge(ByVal Doc As Document, ByVal DocResult As Do
     
     Set Handler.Doc = Doc
     
+    ' Clean up the mail merge document
     Handler.RemoveTags
     
+    ' Analyse collected mail merge data
+    Dim DocInfo As Collection
+    For Each DocInfo In DocData
+        
+    Next
     
     Dim ResultHandler As New MailMergeExResultHandler
     Set ResultHandler.Doc = DocResult
     
-    ResultHandler.PopulateMerged DocData
+    'ResultHandler.PopulateMerged DocData
     
 End Sub
 

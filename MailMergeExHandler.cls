@@ -128,12 +128,12 @@ Function FieldByGroups() As Collection
     
     Dim Data As Object
     For Each Data In Doc.MailMerge.DataSource.DataFields
-        Dim group As String
+        Dim Group As String
         Dim GroupItems As Collection
         
-        group = MailMergeEx.GroupName(Data.Name)
+        Group = MailMergeEx.GroupName(Data.Name)
         
-        MailMergeEx.AddToGroup Groups, group, Data
+        MailMergeEx.AddToGroup Groups, Group, Data
     Next
   
     Set FieldByGroups = Groups

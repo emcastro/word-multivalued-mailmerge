@@ -144,18 +144,8 @@ Function AnalyseField(Field As Range) As FieldInfo
     ' Extract name
     Dim NameRange As Range
     Set NameRange = Doc.Range(r.Start, NameDelimiterRange.Start)
-    Dim nameRange As Range
-    Set nameRange = Doc.Range(r.Start, nameDelimiterRange.Start)
         
-    item.Name = nameRange.Text
-    
-    ' Extract values
-    Dim valueRange As Range
-    Dim valueStrings As Variant
-    Set valueRange = Doc.Range(nameDelimiterRange.End, r.End)
-    valueStrings = Split(valueRange.Text, Tag_ValueDelimiter)
-    
-    item.Values = valueStrings
+    Item.Name = NameRange.Text
     
     Item.GroupName = MailMergeEx.GroupName(Name)
         
