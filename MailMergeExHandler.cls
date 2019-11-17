@@ -48,16 +48,14 @@ Sub AddFieldTags(f As Field)
     FieldCommand = Trim(f.Code.Text)
 
     If f.Type = wdFieldMergeField And FieldCommand Like "MERGEFIELD *" Then
-        Dim Name As String
         Dim r As Range
         
-        Name = Trim(Split(FieldCommand, " ", 2)(1))
         Set r = FieldRange(f)
         ' insert text in reverse order
         r.InsertBefore Tag_FieldNameDelimiter
-        r.InsertBefore Name
+        r.InsertBefore ExtractName(FieldCommand)
         r.InsertBefore Tag_FieldStart
-        r.InsertAfter Tag_FieldEnd
+        r.InsertAfter " " & Tag_FieldEnd ' Add space in case of empty value after merged document creation
     End If
 End Sub
 
@@ -66,18 +64,24 @@ Sub RemoveFieldTags(f As Field)
     FieldCommand = Trim(f.Code.Text)
 
     If f.Type = wdFieldMergeField And FieldCommand Like "MERGEFIELD *" Then
-        Dim Name As String
         Dim r As Range
         
-        Name = Trim(Split(FieldCommand, " ", 2)(1))
         Set r = FieldRange(f)
         ' remove text in reverse order
         SafeRemoveBefore r, Tag_FieldNameDelimiter
-        SafeRemoveBefore r, Name
+        SafeRemoveBefore r, ExtractName(FieldCommand)
         SafeRemoveBefore r, Tag_FieldStart
-        SafeRemoveAfter r, Tag_FieldEnd
+        SafeRemoveAfter r, " " & Tag_FieldEnd
     End If
 End Sub
+
+Function ExtractName(FieldCommand As String)
+    Dim Name As String
+    
+    Name = Trim(Split(FieldCommand, " ", 2)(1))
+    Name = Replace(Name, Chr(34), "") ' Remove " (depends on version of Word)
+    ExtractName = Name
+End Function
 
 Sub AddStartOfDocumentTag()
     StartOfDocumentRange.InsertAfter Tag_StartOfDocument

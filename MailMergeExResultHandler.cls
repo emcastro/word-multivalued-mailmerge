@@ -24,47 +24,48 @@ Sub Class_Initialize()
     Tag_ValueDelimiter = MailMergeEx.Tag_ValueDelimiter
 End Sub
 
-Public Sub PopulateMerged()
+Public Sub PopulateMerged(DocData As Collection) ' by doc index of (Collection by field name of (Collection of string values))
+    
+    Dim docIdx As Integer
+    docIdx = 1
     
     ' Foreach sub-document
     Dim Subdoc As Range
     Set Subdoc = SubDocAfter(StartOfDocumentRange)
     Do Until Subdoc Is Nothing
+        Dim DocInfo As Collection
+        Set DocInfo = DocData(docIdx)
         
         Dim Analysis As Collection
-        Set Analysis = AnalyzeSubDoc(Subdoc)
+        Set Analysis = AnalyzeSubDoc(Subdoc, DocData(docIdx))
         
         Dim FieldGroup As Collection
         Dim Field As FieldInfo
         
         For Each FieldGroup In Analysis
-            If FieldGroup.Count = 1 Then
-                ' Simple substitution
-                Set Field = FieldGroup(1)
-            Else
-                ' Complex substitution
-                Dim r As Range
-                Set r = Doc.Range(FieldGroup(1).Range.Start, FieldGroup(FieldGroup.Count).Range.End)
-                Set r = Doc.Range(r.Paragraphs.First.Range.Start, r.Paragraphs.Last.Range.End)
-                                
-                If Asc(Right(r, 1)) <> 13 Then ' Special case when not standard paragraph (i.e. table)
-                    r.End = r.End + 1
-                End If
-                
-                r.Copy
-                r.Collapse
-                ' Replace in reverse order
-                ReplaceFieldWithValues fieldGroup, UBound(fieldGroup(1).Values), r
-                
-                Dim i As Integer
-                For i = UBound(fieldGroup(1).Values) - 1 To LBound(fieldGroup(1).Values) Step -1
-                    r.Paste
-                    ReplaceFieldWithValues fieldGroup, i, r
-                Next
+            ' Complex substitution
+            Dim r As Range
+            Set r = Doc.Range(FieldGroup(1).Range.Start, FieldGroup(FieldGroup.Count).Range.End)
+            Set r = Doc.Range(r.Paragraphs.First.Range.Start, r.Paragraphs.Last.Range.End)
+                            
+            If Asc(Right(r, 1)) <> 13 Then ' Special case when not standard paragraph (i.e. table)
+                r.End = r.End + 1
             End If
+            
+            r.Copy
+            r.Collapse
+            ' Replace in reverse order
+            ReplaceFieldWithValues FieldGroup, FieldGroup(1).Values.Count, r
+            
+            Dim i As Integer
+            For i = FieldGroup(1).Values.Count - 1 To 1 Step -1
+                r.Paste
+                ReplaceFieldWithValues FieldGroup, i, r
+            Next
         Next
                 
-        Set subdoc = SubDocAfter(subdoc)
+        Set Subdoc = SubDocAfter(Subdoc)
+        docIdx = docIdx + 1
     Loop
     
     RemoveStartOfDocumentTags
@@ -72,7 +73,7 @@ Public Sub PopulateMerged()
 End Sub
 
 Sub RemoveStartOfDocumentTags()
-    Doc.Range.Find.Execute Tag_StartOfDocument, ReplaceWith:=""
+    Doc.Range.Find.Execute Tag_StartOfDocument, ReplaceWith:="", Replace:=wdReplaceAll
 End Sub
 
 Sub ReplaceFieldWithValues(FieldGroup As Collection, idx As Integer, r As Range)
@@ -86,7 +87,7 @@ Sub ReplaceFieldWithValues(FieldGroup As Collection, idx As Integer, r As Range)
     Next
 End Sub
 
-Function AnalyzeSubDoc(Subdoc As Range) As Collection
+Function AnalyzeSubDoc(Subdoc As Range, DocInfo As Collection) As Collection
     
     Dim r As Range
     Dim Field As Range
@@ -102,11 +103,11 @@ Function AnalyzeSubDoc(Subdoc As Range) As Collection
             Exit Do
         End If
         
-        Items.Add AnalyseField(r)
+        Items.Add AnalyseField(r, DocInfo)
     Loop
     
-    ' Groupe by non-empty GroupName
-    Dim groupedItems As New Collection
+    ' Group by non-empty GroupName
+    Dim GroupedItems As New Collection
     
     Dim Item As FieldInfo
     Dim CurrentGroup As Collection
@@ -115,17 +116,17 @@ Function AnalyzeSubDoc(Subdoc As Range) As Collection
     For Each Item In Items
         If Item.GroupName <> CurrentGroupName Or Item.GroupName = "" Then
             Set CurrentGroup = New Collection
-            groupedItems.Add CurrentGroup
+            GroupedItems.Add CurrentGroup
             CurrentGroupName = Item.GroupName
         End If
         CurrentGroup.Add Item
     Next
             
-    Set AnalyzeSubDoc = groupedItems
+    Set AnalyzeSubDoc = GroupedItems
     
 End Function
 
-Function AnalyseField(Field As Range) As FieldInfo
+Function AnalyseField(Field As Range, DocInfo As Collection) As FieldInfo
     Dim Item As New FieldInfo
     
     Set Item.Range = Field.Duplicate
@@ -147,7 +148,9 @@ Function AnalyseField(Field As Range) As FieldInfo
         
     Item.Name = NameRange.Text
     
-    Item.GroupName = MailMergeEx.GroupName(Name)
+    Item.GroupName = MailMergeEx.GroupName(Item.Name)
+    
+    Set Item.Values = DocInfo(Item.GroupName)(Item.Name)
         
     Set AnalyseField = Item
 End Function

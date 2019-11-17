@@ -12,3 +12,4 @@ Option Explicit
 Public Name As String
 Public Range As Range
 Public GroupName As String
+Public Values As Collection ' of Strings

@@ -121,7 +121,7 @@ Private Sub App_MailMergeAfterMerge(ByVal Doc As Document, ByVal DocResult As Do
     Dim ResultHandler As New MailMergeExResultHandler
     Set ResultHandler.Doc = DocResult
     
-    'ResultHandler.PopulateMerged DocData
+    ResultHandler.PopulateMerged DocData
     
 End Sub
 
